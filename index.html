@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EPS Field Orders</title>
+<style>
+:root{
+  --ink:#1a1a2e;
+  --deep:#16213e;
+  --slate:#555e7a;
+  --mist:#8b95a8;
+  --paper:#ffffff;
+  --wash:#f7f8fa;
+  --rule:#d8dce6;
+  --hair:#eaecf0;
+
+  --good:#1D9E75;
+  --warn:#BA7517;
+  --stop:#A32D2D;
+
+  --r-lg:12px;
+  --r-md:6px;
+
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+
+  --sku1:#EF9F27;
+  --sku2:#185FA5;
+  --sku3:#1D9E75;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:var(--sans);background:var(--wash);color:var(--ink);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.fig{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+
+.top{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);color:#fff;padding:16px 18px}
+.top-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{font-size:17px;font-weight:700;letter-spacing:-0.2px}
+.brand span{color:#8b95a8;font-weight:500}
+.top-meta{margin-left:auto;display:flex;gap:8px;align-items:center;font-size:11px;color:#b9c0d0;flex-wrap:wrap}
+.mode{border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:3px 10px;font-size:10.5px;letter-spacing:.3px;text-transform:uppercase}
+.mode.bad{border-color:#f2b8a8;color:#f2b8a8}
+.top .sub{font-size:12px;color:#b9c0d0;margin-top:6px}
+.top-fields{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.top-fields input{flex:1;min-width:120px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:8px;padding:8px 10px;font-size:13px}
+.top-fields input::placeholder{color:#8b95a8}
+
+main{max-width:760px;margin:0 auto;padding:16px}
+
+.card{background:var(--paper);border:1px solid var(--rule);border-radius:var(--r-lg);padding:16px 18px;margin-bottom:14px}
+.card h2{margin:0 0 3px;font-size:16px;font-weight:680}
+.card h3{margin:0 0 3px;font-size:14px;font-weight:680}
+.card .sub{margin:0 0 12px;font-size:12px;color:var(--mist)}
+
+.grid{display:grid;gap:12px}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g2{grid-template-columns:repeat(2,1fr)}
+
+.stat{background:var(--wash);border:1px solid var(--rule);border-radius:var(--r-md);padding:10px 12px;text-align:center}
+.stat-l{font-size:10.5px;color:var(--mist);text-transform:uppercase;letter-spacing:.3px}
+.stat-v{font-size:22px;font-weight:700;line-height:1.2}
+
+label.fld{display:block;margin-bottom:10px}
+label.fld span{display:block;font-size:11.5px;color:var(--slate);margin-bottom:4px}
+input,select,textarea{width:100%;padding:9px 10px;border:1px solid var(--rule);border-radius:var(--r-md);font-family:inherit;font-size:15px;background:var(--paper);color:var(--ink)}
+input:focus,select:focus,textarea:focus{outline:2px solid #185FA5;outline-offset:1px}
+textarea{resize:vertical;min-height:56px}
+
+button.btn{background:var(--paper);border:1px solid var(--rule);border-radius:var(--r-md);padding:10px 16px;font-family:inherit;font-size:14px;cursor:pointer;color:var(--ink)}
+button.btn:hover{background:var(--wash)}
+button.btn.pri{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:600}
+button.btn.pri:hover{background:var(--deep)}
+button.btn.block{width:100%}
+button.btn.sm{padding:5px 11px;font-size:12.5px}
+button.btn[disabled]{opacity:.45;cursor:not-allowed}
+
+.stopitem{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--rule);border-radius:var(--r-md);margin-bottom:6px;cursor:pointer}
+.stopitem.done{opacity:.5}
+.stopitem .num{width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stopitem .info{flex:1}
+.stopitem .id{font-weight:700;font-size:13px}
+.stopitem .loc{font-size:11.5px;color:var(--mist)}
+
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{padding:6px 8px;text-align:left;border-bottom:1px solid var(--hair)}
+th{font-size:10px;color:var(--mist);text-transform:uppercase;letter-spacing:.3px;font-weight:600}
+td.num,th.num{text-align:right}
+.mini{font-size:11.5px;color:var(--slate)}
+
+.pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:11px;border:1px solid;font-weight:600}
+.pill.go{background:#e7f7f1;color:#166b50;border-color:#b6e6d4}
+.pill.hot{background:#fbeaea;color:var(--stop);border-color:#f0c9c9}
+.pill.mid{background:#fdf3e3;color:#8a5610;border-color:#f0dcb8}
+
+.note{background:#E6F1FB;color:#185FA5;border:1px solid #bcd9f0;border-radius:var(--r-md);padding:10px 12px;font-size:12.5px}
+.warnbox{background:#fdf3e3;color:#8a5610;border:1px solid #f0dcb8;border-radius:var(--r-md);padding:10px 12px;font-size:12.5px}
+.empty{color:var(--mist);font-size:12.5px;padding:16px;text-align:center;border:1px dashed var(--rule);border-radius:var(--r-md)}
+
+#flash{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;z-index:900;max-width:90%;width:520px}
+#flash .box{box-shadow:0 3px 14px rgba(26,26,46,.18);margin-bottom:6px}
+
+.row{display:flex;gap:9px;flex-wrap:wrap}
+.row>*{flex:1;min-width:90px}
+hr.sep{border:0;border-top:1px solid var(--hair);margin:14px 0}
+
+.sku-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.sku-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.sku-row label{flex:0 0 110px;font-size:13px;font-weight:600}
+.sku-row input{flex:1}
+.sku-total{font-weight:700;font-size:15px;text-align:right;padding-top:6px}
+
+#lock-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);color:#fff;z-index:1000;display:none;align-items:center;justify-content:center;padding:24px}
+.lock-box{max-width:340px;width:100%;text-align:center}
+.lock-title{font-size:20px;font-weight:700;margin-bottom:6px}
+.lock-sub{font-size:13px;color:#b9c0d0;margin-bottom:20px;line-height:1.5}
+.lock-box input{width:100%;padding:13px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#fff;font-size:16px;margin-bottom:10px}
+.lock-box input::placeholder{color:#8b95a8}
+.lock-err{color:#f2b8a8;font-size:12.5px;margin-top:10px;min-height:16px}
+.lock-link{color:#b9c0d0;font-size:12px;margin-top:16px;text-decoration:underline;cursor:pointer;display:inline-block}
+
+.maint-row{display:flex;align-items:center;gap:10px;padding:9px 2px;cursor:pointer;font-size:14px}
+.maint-row input{width:auto;flex:0 0 auto}
+</style>
+</head>
+<body>
+
+<div id="lock-overlay">
+  <div class="lock-box">
+    <div class="lock-title">EPS Field Orders</div>
+    <div class="lock-sub" id="lock-sub">Enter the field password to continue.</div>
+    <input type="password" id="lock-pw1" placeholder="Password">
+    <input type="password" id="lock-pw2" placeholder="Confirm password" style="display:none">
+    <button class="btn pri block" id="lock-submit">Unlock</button>
+    <div class="lock-err" id="lock-err"></div>
+    <div class="lock-link" id="lock-cancel" style="display:none">Cancel</div>
+  </div>
+</div>
+
+
+<div class="top">
+  <div class="top-row">
+    <div class="brand">Enjoy Pure Start <span>&middot; Field Orders</span></div>
+    <div class="top-meta">
+      <span class="mode" id="hd-mode">saving to this device</span>
+      <span class="mode" id="hd-outbox" style="display:none"></span>
+      <button class="btn sm" id="hd-lock" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.3)">Lock</button>
+    </div>
+  </div>
+  <div class="sub">Count what's in the machine, request a restock, submit &mdash; office staff pick it up from the Master Console.</div>
+  <div class="top-fields">
+    <input type="text" id="hd-rep" placeholder="Your name / initials">
+    <input type="date" id="hd-date">
+  </div>
+</div>
+
+<main>
+  <div class="card" id="setup-card">
+    <h3>Connections</h3>
+    <p class="sub">Same addresses used elsewhere tonight &mdash; ask the office if you don't have these.</p>
+    <label class="fld"><span>Machine directory URL (EPS Assist)</span><input type="text" id="fo-machines-url" placeholder="https://.../exec"></label>
+    <label class="fld"><span>Stats push/pull URL (EPS Stats)</span><input type="text" id="fo-stats-url" placeholder="https://.../exec"></label>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn sm" id="fo-pull-machines">Pull machine directory</button>
+      <button class="btn sm" id="fo-pull-route">Pull my route</button>
+    </div>
+    <div class="mini" id="fo-conn-status" style="margin-top:8px"></div>
+    <div class="lock-link" id="fo-change-pw" style="color:var(--slate);margin-top:8px">Change password</div>
+  </div>
+
+  <div class="card" id="route-card">
+    <h3>My route today</h3>
+    <p class="sub">Tap a stop to log that machine below.</p>
+    <div id="route-body"></div>
+  </div>
+
+  <div class="card" id="log-card">
+    <h3>Log a visit</h3>
+    <label class="fld"><span>Machine</span><select id="fo-machine"></select></label>
+    <div id="fo-machine-info" class="mini" style="margin-bottom:10px"></div>
+
+    <div class="sec">
+      <div style="font-size:11.5px;color:var(--slate);text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px">Counted in the machine</div>
+      <div class="sku-row"><span class="sku-dot" style="background:var(--sku1)"></span><label>Cape Le Grand</label><input type="number" min="0" step="1" id="fo-count-1" value="0"></div>
+      <div class="sku-row"><span class="sku-dot" style="background:var(--sku2)"></span><label>Splash</label><input type="number" min="0" step="1" id="fo-count-2" value="0"></div>
+      <div class="sku-row"><span class="sku-dot" style="background:var(--sku3)"></span><label>Copacabana</label><input type="number" min="0" step="1" id="fo-count-3" value="0"></div>
+      <div class="sku-total">Total: <span id="fo-count-total" class="fig">0</span></div>
+    </div>
+
+    <hr class="sep">
+
+    <div class="sec">
+      <div style="font-size:11.5px;color:var(--slate);text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px">Requested restock</div>
+      <div class="sku-row"><span class="sku-dot" style="background:var(--sku1)"></span><label>Cape Le Grand</label><input type="number" min="0" step="1" id="fo-order-1" value="0"></div>
+      <div class="sku-row"><span class="sku-dot" style="background:var(--sku2)"></span><label>Splash</label><input type="number" min="0" step="1" id="fo-order-2" value="0"></div>
+      <div class="sku-row"><span class="sku-dot" style="background:var(--sku3)"></span><label>Copacabana</label><input type="number" min="0" step="1" id="fo-order-3" value="0"></div>
+      <div class="sku-total">Total: <span id="fo-order-total" class="fig">0</span></div>
+    </div>
+
+    <hr class="sep">
+
+    <div class="sec">
+      <div style="font-size:11.5px;color:var(--slate);text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px">Maintenance performed</div>
+      <label class="maint-row"><input type="checkbox" id="fo-maint-glass"><span>Glass cleaned</span></label>
+      <label class="maint-row"><input type="checkbox" id="fo-maint-handles"><span>Door handle sanitized</span></label>
+      <label class="maint-row"><input type="checkbox" id="fo-maint-coil"><span>Condenser coil cleaned</span></label>
+      <label class="maint-row"><input type="checkbox" id="fo-maint-validator"><span>Coin/bill validator checked</span></label>
+      <label class="maint-row"><input type="checkbox" id="fo-maint-drain"><span>Drain pan emptied</span></label>
+      <label class="maint-row"><input type="checkbox" id="fo-maint-exterior"><span>Exterior wiped down</span></label>
+      <label class="fld" style="margin-top:8px"><span>Maintenance notes</span><textarea id="fo-maint-notes" placeholder="anything that needs a repair visit, parts, etc."></textarea></label>
+    </div>
+
+    <hr class="sep">
+
+    <label class="fld"><span>Needed by</span><input type="date" id="fo-needed"></label>
+    <label class="fld"><span>Notes</span><textarea id="fo-notes" placeholder="optional"></textarea></label>
+
+    <button class="btn pri block" id="fo-submit">Submit this visit</button>
+  </div>
+
+  <div class="card" id="outbox-card" style="display:none">
+    <h3>Pending &mdash; not sent yet</h3>
+    <p class="sub">Saved on this device. Nothing here is lost if the connection drops &mdash; retry any time.</p>
+    <div id="outbox-body"></div>
+    <button class="btn sm" id="fo-retry-all" style="margin-top:8px">Retry all pending</button>
+  </div>
+
+  <div class="card">
+    <h3>Recently submitted</h3>
+    <div id="recent-body"></div>
+  </div>
+</main>
+
+<div id="flash"></div>
+
+<script>
+'use strict';
+
+/* ---------- reference data (mirrors the Master Console's SKU object) ---------- */
+var SKU = {
+  'SKU-001':{ name:'Cape Le Grand', color:'#EF9F27' },
+  'SKU-002':{ name:'Splash', color:'#185FA5' },
+  'SKU-003':{ name:'Copacabana', color:'#1D9E75' }
+};
+var SKU_IDS = ['SKU-001','SKU-002','SKU-003'];
+
+var FR_GROUP_LABELS = {
+  G1:'Universities', G2:'Sports & Tennis', G3:'Zoos & Parks', G4:'Airports & Lounges',
+  G5:'Hospitals', G6:'Cruise Lines', G7:'Hotel Brands', G8:'Schools & SNAP'
+};
+function foGroupOf(machineId){
+  var m = String(machineId || '').match(/^(G\d+)-/);
+  return m ? m[1] : '';
+}
+
+/* ---------- storage ---------- */
+var LS_PREFIX = 'epsfo_';
+var STORE_OK = true;
+(function(){
+  try{ localStorage.setItem(LS_PREFIX + 'probe', '1'); localStorage.removeItem(LS_PREFIX + 'probe'); }
+  catch(e){ STORE_OK = false; }
+})();
+function load(key, fallback){
+  if(!STORE_OK) return fallback;
+  try{
+    var v = localStorage.getItem(LS_PREFIX + key);
+    return v === null ? fallback : JSON.parse(v);
+  }catch(e){ return fallback; }
+}
+function save(key, val){
+  if(!STORE_OK){ flash('Not saved - this browser is blocking local storage.', 'warn'); return; }
+  try{ localStorage.setItem(LS_PREFIX + key, JSON.stringify(val)); }
+  catch(e){ flash('Could not save - storage may be full.', 'warn'); }
+}
+
+function esc(s){
+  return String(s === null || s === undefined ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function el(id){ return document.getElementById(id); }
+function today(){ return new Date().toISOString().split('T')[0]; }
+function addDays(dateStr, days){
+  var d = new Date(dateStr + 'T00:00:00');
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split('T')[0];
+}
+function flash(msg, kind){
+  var host = el('flash');
+  var box = document.createElement('div');
+  box.className = 'box ' + (kind === 'warn' ? 'warnbox' : 'note');
+  box.textContent = msg;
+  host.appendChild(box);
+  setTimeout(function(){ if(box.parentNode) box.parentNode.removeChild(box); }, 6000);
+}
+
+/* ---------- state ---------- */
+var REP           = load('rep', '');
+var FO_DATE       = load('date', today());
+var FO_MACHINES_URL = load('machinesUrl', '');
+var FO_STATS_URL  = load('statsUrl', '');
+var FO_MACHINES   = load('machines', {});
+var FO_MACHINES_AT = load('machinesAt', null);
+var FO_ROUTE      = load('route', { stops:[], batchId:null });
+var FO_ROUTE_AT   = load('routeAt', null);
+var FO_VISITED    = load('visited', {});          /* machineId -> true, local only, cleared when date changes */
+var FO_OUTBOX     = load('outbox', []);           /* entries not yet confirmed pushed */
+var FO_SENT       = load('sentLog', []);           /* most recent confirmed pushes, for the rep's own reference */
+var FO_SYNC_SEQ   = 0;
+
+/* A shared device PIN, not an account system - there is no server to
+   check it against, so it is stored in plain localStorage on this
+   device and compared client-side. It stops a stranger who picks up
+   an unattended iPad from submitting as a rep; it does not stop
+   someone who opens dev tools. Set that expectation correctly rather
+   than implying real authentication. */
+var FO_PASSWORD   = load('password', null);
+var FO_UNLOCKED   = false;
+try{ FO_UNLOCKED = sessionStorage.getItem(LS_PREFIX + 'unlocked') === '1'; }catch(e){}
+var FO_LOCK_MODE  = null; /* 'set' | 'enter' | 'change' */
+
+if(FO_VISITED.__forDate !== FO_DATE){ FO_VISITED = { __forDate: FO_DATE }; save('visited', FO_VISITED); }
+
+/* ---------- JSONP transport - push-and-pull, same technique as every
+   other console tonight: this may be opened straight from disk, and
+   Chrome blocks fetch/XHR entirely from a file:// origin. ---------- */
+function foSyncCall(baseUrl, params, cb){
+  if(!baseUrl){ if(cb) cb({ reason:'no-endpoint' }); return; }
+  var name = '__epsFoSync' + (++FO_SYNC_SEQ);
+  var done = false;
+  var script = document.createElement('script');
+  var timer = null;
+  function cleanup(){
+    if(timer) clearTimeout(timer);
+    try{ delete window[name]; }catch(e){ window[name] = undefined; }
+    if(script.parentNode) script.parentNode.removeChild(script);
+  }
+  window[name] = function(data){
+    if(done) return; done = true; cleanup();
+    if(cb) cb(null, data);
+  };
+  script.onerror = function(){
+    if(done) return; done = true; cleanup();
+    if(cb) cb({ reason:'unreachable' });
+  };
+  timer = setTimeout(function(){
+    if(done) return; done = true; cleanup();
+    if(cb) cb({ reason:'timeout' });
+  }, 15000);
+  var qs = Object.keys(params || {}).map(function(k){
+    return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+  }).join('&');
+  var base = baseUrl.replace(/\/+$/, '');
+  script.src = base + (base.indexOf('?') > -1 ? '&' : '?') + qs + '&callback=' + name;
+  document.head.appendChild(script);
+}
+
+function foPullMachines(cb){
+  foSyncCall(FO_MACHINES_URL, { action:'machines' }, function(err, res){
+    if(err){ if(cb) cb(err); return; }
+    FO_MACHINES = (res && res.machines) || {};
+    FO_MACHINES_AT = new Date().toISOString();
+    save('machines', FO_MACHINES);
+    save('machinesAt', FO_MACHINES_AT);
+    if(cb) cb(null, res);
+  });
+}
+
+function foPullRoute(cb){
+  if(!REP){ if(cb) cb({ reason:'no-rep' }); return; }
+  foSyncCall(FO_STATS_URL, { mode:'fieldRoutePull', rep:REP, date:FO_DATE }, function(err, res){
+    if(err){ if(cb) cb(err); return; }
+    FO_ROUTE = { stops:(res && res.stops) || [], batchId:(res && res.batchId) || null };
+    FO_ROUTE_AT = new Date().toISOString();
+    save('route', FO_ROUTE);
+    save('routeAt', FO_ROUTE_AT);
+    if(cb) cb(null, res);
+  });
+}
+
+/* ---------- outbox : every submission lands here FIRST, before any
+   network attempt - so a bad connection never loses a rep's count.
+   Cleared only once the push is actually confirmed. ---------- */
+function foQueueVisit(entry){
+  FO_OUTBOX.push(entry);
+  save('outbox', FO_OUTBOX);
+  foFlushOutbox();
+}
+
+function foPushOne(entry, cb){
+  var envelope = {
+    type:'fieldOrder',
+    machineId:entry.machineId,
+    location:entry.location,
+    rep:entry.rep,
+    counts:entry.counts,
+    order:entry.order,
+    maintenance:entry.maintenance,
+    neededBy:entry.neededBy,
+    notes:entry.notes,
+    submittedAt:entry.submittedAt
+  };
+  var encoded;
+  try{ encoded = btoa(unescape(encodeURIComponent(JSON.stringify(envelope)))); }
+  catch(e){ if(cb) cb({ reason:'encode' }); return; }
+  foSyncCall(FO_STATS_URL, { data:encoded }, cb);
+}
+
+var FO_FLUSHING = false;
+function foFlushOutbox(){
+  if(FO_FLUSHING) return;
+  if(!FO_OUTBOX.length){ renderOutbox(); return; }
+  if(!FO_STATS_URL){ renderOutbox(); return; }
+  FO_FLUSHING = true;
+  var entry = FO_OUTBOX[0];
+  foPushOne(entry, function(err){
+    FO_FLUSHING = false;
+    if(err){
+      renderOutbox();
+      return; // leave it queued; retried on next flush attempt
+    }
+    FO_OUTBOX.shift();
+    save('outbox', FO_OUTBOX);
+    FO_SENT.unshift(entry);
+    if(FO_SENT.length > 50) FO_SENT.length = 50;
+    save('sentLog', FO_SENT);
+    renderOutbox();
+    renderRecent();
+    renderHeader();
+    if(FO_OUTBOX.length) foFlushOutbox(); // keep draining
+  });
+}
+
+/* ---------- form helpers ---------- */
+function foRecalcTotal(prefix){
+  var total = 0, i;
+  for(i = 1; i <= 3; i++){
+    var v = parseInt((el(prefix + '-' + i) || {}).value, 10);
+    total += isNaN(v) ? 0 : v;
+  }
+  el(prefix + '-total').textContent = total;
+}
+
+function foPopulateMachineSelect(){
+  var sel = el('fo-machine');
+  var ids = Object.keys(FO_MACHINES).sort();
+  var current = sel.value;
+  var byGroup = {};
+  ids.forEach(function(id){
+    var g = foGroupOf(id) || '?';
+    if(!byGroup[g]) byGroup[g] = [];
+    byGroup[g].push(id);
+  });
+  var html = '<option value="">Select a machine...</option>';
+  Object.keys(byGroup).sort().forEach(function(g){
+    html += '<optgroup label="' + esc(g) + (FR_GROUP_LABELS[g] ? ' - ' + esc(FR_GROUP_LABELS[g]) : '') + '">';
+    byGroup[g].forEach(function(id){
+      var m = FO_MACHINES[id];
+      html += '<option value="' + esc(id) + '">' + esc(id) + ' - ' + esc(m.location || '') + '</option>';
+    });
+    html += '</optgroup>';
+  });
+  sel.innerHTML = html;
+  if(current && FO_MACHINES[current]) sel.value = current;
+  foShowMachineInfo();
+}
+
+function foShowMachineInfo(){
+  var id = el('fo-machine').value;
+  var box = el('fo-machine-info');
+  if(!id || !FO_MACHINES[id]){ box.textContent = ''; return; }
+  var m = FO_MACHINES[id];
+  box.textContent = m.location + (m.status ? ' \u00b7 ' + m.status : '');
+}
+
+function foSelectMachine(machineId){
+  el('fo-machine').value = machineId;
+  foShowMachineInfo();
+  el('log-card').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function foSubmitVisit(){
+  var machineId = el('fo-machine').value;
+  if(!machineId){ flash('Pick a machine first.', 'warn'); return; }
+  if(!REP){ flash('Enter your name/initials at the top before submitting.', 'warn'); return; }
+  var m = FO_MACHINES[machineId] || {};
+
+  var entry = {
+    machineId:machineId,
+    location:m.location || '',
+    rep:REP,
+    counts:{
+      sku001: parseInt(el('fo-count-1').value, 10) || 0,
+      sku002: parseInt(el('fo-count-2').value, 10) || 0,
+      sku003: parseInt(el('fo-count-3').value, 10) || 0
+    },
+    order:{
+      sku001: parseInt(el('fo-order-1').value, 10) || 0,
+      sku002: parseInt(el('fo-order-2').value, 10) || 0,
+      sku003: parseInt(el('fo-order-3').value, 10) || 0
+    },
+    maintenance:{
+      glass: el('fo-maint-glass').checked,
+      handles: el('fo-maint-handles').checked,
+      coil: el('fo-maint-coil').checked,
+      validator: el('fo-maint-validator').checked,
+      drain: el('fo-maint-drain').checked,
+      exterior: el('fo-maint-exterior').checked,
+      notes: el('fo-maint-notes').value.trim()
+    },
+    neededBy: el('fo-needed').value || '',
+    notes: el('fo-notes').value.trim(),
+    submittedAt: new Date().toISOString()
+  };
+
+  FO_VISITED[machineId] = true;
+  save('visited', FO_VISITED);
+  foQueueVisit(entry);
+
+  flash('Visit logged for ' + machineId + ' - ' + (FO_STATS_URL ? 'sending...' : 'saved locally, no Stats URL set yet') + '.');
+
+  // reset the form for the next stop, keep the picker but clear everything else
+  ['fo-count-1','fo-count-2','fo-count-3','fo-order-1','fo-order-2','fo-order-3'].forEach(function(id){ el(id).value = 0; });
+  ['fo-maint-glass','fo-maint-handles','fo-maint-coil','fo-maint-validator','fo-maint-drain','fo-maint-exterior'].forEach(function(id){ el(id).checked = false; });
+  el('fo-maint-notes').value = '';
+  el('fo-notes').value = '';
+  foRecalcTotal('fo-count');
+  foRecalcTotal('fo-order');
+  renderRoute();
+}
+
+/* ---------- lock screen ---------- */
+function foShowLock(mode){
+  FO_LOCK_MODE = mode;
+  var overlay = el('lock-overlay');
+  var sub = el('lock-sub');
+  var pw1 = el('lock-pw1'), pw2 = el('lock-pw2');
+  var btn = el('lock-submit');
+  var cancel = el('lock-cancel');
+  el('lock-err').textContent = '';
+  pw1.value = ''; pw2.value = '';
+
+  if(mode === 'set'){
+    sub.textContent = 'Set a password for this device. Anyone who knows it can submit as any rep - treat it like a shared PIN, not a personal login.';
+    pw1.placeholder = 'New password'; pw1.style.display = 'block';
+    pw2.placeholder = 'Confirm password'; pw2.style.display = 'block';
+    btn.textContent = 'Set password';
+    cancel.style.display = 'none';
+  }else if(mode === 'change'){
+    sub.textContent = 'Enter the current password, then the new one.';
+    pw1.placeholder = 'Current password'; pw1.style.display = 'block';
+    pw2.placeholder = 'New password'; pw2.style.display = 'block';
+    btn.textContent = 'Change password';
+    cancel.style.display = 'inline-block';
+  }else{ // 'enter'
+    sub.textContent = 'Enter the field password to continue.';
+    pw1.placeholder = 'Password'; pw1.style.display = 'block';
+    pw2.style.display = 'none';
+    btn.textContent = 'Unlock';
+    cancel.style.display = 'none';
+  }
+  overlay.style.display = 'flex';
+  pw1.focus();
+}
+
+function foHideLock(){
+  el('lock-overlay').style.display = 'none';
+  FO_LOCK_MODE = null;
+}
+
+function foUnlock(){
+  FO_UNLOCKED = true;
+  try{ sessionStorage.setItem(LS_PREFIX + 'unlocked', '1'); }catch(e){}
+  foHideLock();
+}
+
+function foLockNow(){
+  FO_UNLOCKED = false;
+  try{ sessionStorage.removeItem(LS_PREFIX + 'unlocked'); }catch(e){}
+  foShowLock('enter');
+}
+
+function foLockSubmit(){
+  var pw1 = el('lock-pw1').value;
+  var pw2 = el('lock-pw2').value;
+  var err = el('lock-err');
+
+  if(FO_LOCK_MODE === 'set'){
+    if(pw1.length < 4){ err.textContent = 'Use at least 4 characters.'; return; }
+    if(pw1 !== pw2){ err.textContent = 'Passwords don\u2019t match.'; return; }
+    FO_PASSWORD = pw1;
+    save('password', FO_PASSWORD);
+    foUnlock();
+  }else if(FO_LOCK_MODE === 'change'){
+    if(pw1 !== FO_PASSWORD){ err.textContent = 'Current password is wrong.'; return; }
+    if(pw2.length < 4){ err.textContent = 'New password needs at least 4 characters.'; return; }
+    FO_PASSWORD = pw2;
+    save('password', FO_PASSWORD);
+    foHideLock();
+    flash('Password changed.');
+  }else{ // 'enter'
+    if(pw1 !== FO_PASSWORD){ err.textContent = 'Wrong password.'; return; }
+    foUnlock();
+  }
+}
+
+/* ---------- render ---------- */
+function renderHeader(){
+  el('hd-mode').textContent = STORE_OK ? 'saving to this device' : 'memory only - do not close this tab';
+  if(!STORE_OK) el('hd-mode').className = 'mode bad';
+  var ob = el('hd-outbox');
+  if(FO_OUTBOX.length){
+    ob.style.display = 'inline-block';
+    ob.textContent = FO_OUTBOX.length + ' pending';
+    ob.className = 'mode bad';
+  }else{
+    ob.style.display = 'none';
+  }
+}
+
+function renderRoute(){
+  var host = el('route-body');
+  var stops = FO_ROUTE.stops || [];
+  if(!stops.length){
+    host.innerHTML = '<div class="empty">' +
+      (FO_ROUTE_AT ? 'No route assigned for you today.' : 'Pull your route above, or just pick a machine below and log a visit directly.') +
+      '</div>';
+    return;
+  }
+  var h = '';
+  stops.forEach(function(s, i){
+    var done = !!FO_VISITED[s.machineId];
+    h += '<div class="stopitem' + (done ? ' done' : '') + '" data-fostop="' + esc(s.machineId) + '">' +
+      '<div class="num">' + (i + 1) + '</div>' +
+      '<div class="info"><div class="id">' + esc(s.machineId) + (done ? ' <span class="pill go">visited</span>' : '') + '</div>' +
+      '<div class="loc">' + esc(s.location) + '</div></div>' +
+      '</div>';
+  });
+  host.innerHTML = h;
+  var items = host.querySelectorAll('[data-fostop]'), i;
+  for(i = 0; i < items.length; i++){
+    items[i].onclick = function(){ foSelectMachine(this.getAttribute('data-fostop')); };
+  }
+}
+
+function renderOutbox(){
+  var card = el('outbox-card');
+  if(!FO_OUTBOX.length){ card.style.display = 'none'; renderHeader(); return; }
+  card.style.display = 'block';
+  var host = el('outbox-body');
+  var h = '<table><thead><tr><th>Machine</th><th>Rep</th><th class="num">Total order</th><th></th></tr></thead><tbody>';
+  FO_OUTBOX.forEach(function(e){
+    var totalOrder = (e.order.sku001||0) + (e.order.sku002||0) + (e.order.sku003||0);
+    h += '<tr><td class="fig">' + esc(e.machineId) + '</td><td>' + esc(e.rep) + '</td><td class="num fig">' + totalOrder + '</td>' +
+      '<td><span class="pill hot">not sent</span></td></tr>';
+  });
+  h += '</tbody></table>';
+  host.innerHTML = h;
+  renderHeader();
+}
+
+function renderRecent(){
+  var host = el('recent-body');
+  if(!FO_SENT.length){ host.innerHTML = '<div class="empty">Nothing submitted yet this session.</div>'; return; }
+  var h = '<table><thead><tr><th>Machine</th><th class="num">Total in machine</th><th class="num">Total requested</th><th>Submitted</th></tr></thead><tbody>';
+  FO_SENT.slice(0, 15).forEach(function(e){
+    var totalCount = (e.counts.sku001||0) + (e.counts.sku002||0) + (e.counts.sku003||0);
+    var totalOrder = (e.order.sku001||0) + (e.order.sku002||0) + (e.order.sku003||0);
+    h += '<tr><td class="fig">' + esc(e.machineId) + '</td><td class="num fig">' + totalCount + '</td><td class="num fig">' + totalOrder + '</td>' +
+      '<td class="mini">' + esc(e.submittedAt.slice(0,16).replace('T',' ')) + '</td></tr>';
+  });
+  h += '</tbody></table>';
+  host.innerHTML = h;
+}
+
+function renderConnStatus(){
+  var box = el('fo-conn-status');
+  var parts = [];
+  parts.push(FO_MACHINES_AT ? Object.keys(FO_MACHINES).length + ' machines pulled ' + FO_MACHINES_AT : 'machine directory not pulled yet');
+  parts.push(FO_ROUTE_AT ? (FO_ROUTE.stops.length) + '-stop route pulled ' + FO_ROUTE_AT : 'route not pulled yet');
+  box.innerHTML = parts.map(function(p){ return esc(p); }).join('<br>');
+}
+
+/* ---------- boot ---------- */
+el('hd-rep').value = REP;
+el('hd-date').value = FO_DATE;
+el('fo-machines-url').value = FO_MACHINES_URL;
+el('fo-stats-url').value = FO_STATS_URL;
+el('fo-needed').value = addDays(today(), 1);
+
+el('hd-rep').onchange = function(){ REP = this.value.trim(); save('rep', REP); };
+el('hd-date').onchange = function(){
+  FO_DATE = this.value || today();
+  save('date', FO_DATE);
+  FO_VISITED = { __forDate: FO_DATE };
+  save('visited', FO_VISITED);
+  renderRoute();
+};
+el('fo-machines-url').onchange = function(){ FO_MACHINES_URL = this.value.trim(); save('machinesUrl', FO_MACHINES_URL); };
+el('fo-stats-url').onchange = function(){ FO_STATS_URL = this.value.trim(); save('statsUrl', FO_STATS_URL); foFlushOutbox(); };
+
+el('fo-pull-machines').onclick = function(){
+  flash('Pulling machine directory...');
+  foPullMachines(function(err){
+    if(err){ flash('Pull failed (' + (err.reason || 'error') + ').', 'warn'); return; }
+    flash(Object.keys(FO_MACHINES).length + ' machines pulled.');
+    foPopulateMachineSelect();
+    renderConnStatus();
+  });
+};
+el('fo-pull-route').onclick = function(){
+  if(!REP){ flash('Enter your name/initials first.', 'warn'); return; }
+  flash('Pulling your route...');
+  foPullRoute(function(err){
+    if(err){ flash('Route pull failed (' + (err.reason || 'error') + ').', 'warn'); return; }
+    flash(FO_ROUTE.stops.length + '-stop route pulled.');
+    renderRoute();
+    renderConnStatus();
+  });
+};
+
+el('fo-machine').onchange = foShowMachineInfo;
+['fo-count-1','fo-count-2','fo-count-3'].forEach(function(id){ el(id).oninput = function(){ foRecalcTotal('fo-count'); }; });
+['fo-order-1','fo-order-2','fo-order-3'].forEach(function(id){ el(id).oninput = function(){ foRecalcTotal('fo-order'); }; });
+el('fo-submit').onclick = foSubmitVisit;
+el('fo-retry-all').onclick = function(){ flash('Retrying pending submissions...'); foFlushOutbox(); };
+
+el('lock-submit').onclick = foLockSubmit;
+el('lock-pw1').onkeydown = function(e){ if(e.key === 'Enter') foLockSubmit(); };
+el('lock-pw2').onkeydown = function(e){ if(e.key === 'Enter') foLockSubmit(); };
+el('lock-cancel').onclick = foHideLock;
+el('hd-lock').onclick = foLockNow;
+el('fo-change-pw').onclick = function(){ foShowLock('change'); };
+
+foPopulateMachineSelect();
+renderRoute();
+renderOutbox();
+renderRecent();
+renderConnStatus();
+renderHeader();
+foFlushOutbox(); // in case there's already a pending outbox from last session and a URL is set
+
+if(!FO_PASSWORD){
+  foShowLock('set');
+}else if(!FO_UNLOCKED){
+  foShowLock('enter');
+}
+
+// A route or machine directory more than a day stale is worth a quiet
+// refresh attempt on load, not a blocking one - the rep can keep
+// working with what's cached either way.
+if(FO_STATS_URL && REP && (!FO_ROUTE_AT || (Date.now() - new Date(FO_ROUTE_AT).getTime()) > 86400000)){
+  foPullRoute(function(){ renderRoute(); renderConnStatus(); });
+}
+if(FO_MACHINES_URL && (!FO_MACHINES_AT || (Date.now() - new Date(FO_MACHINES_AT).getTime()) > 86400000)){
+  foPullMachines(function(){ foPopulateMachineSelect(); renderConnStatus(); });
+}
+</script>
+</body>
+</html>
